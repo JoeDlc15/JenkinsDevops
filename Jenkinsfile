@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        any {
+        docker {
             image 'santiluis/jenkins-zip:1.0.0'
         }
     }
