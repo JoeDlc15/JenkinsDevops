@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'santiluis/jenkins-zip:1.0.0'
+        }
+    }
 
     stages {
         stage('Checkout') {
@@ -20,21 +24,6 @@ pipeline {
             }
         }
 
-        stage('Install zip if missing') {
-            steps {
-                sh '''
-                echo "Verificando si zip está instalado..."
-                if ! command -v zip >/dev/null 2>&1; then
-                  echo "zip NO está instalado. Instalando..."
-                  apt-get update
-                  apt-get install -y zip
-                else
-                  echo "zip ya está instalado."
-                fi
-                '''
-            }
-        }
-
         stage('Package Release') {
             steps {
                 sh 'echo "Generando artefacto release..."'
@@ -50,7 +39,12 @@ pipeline {
     }
 
     post {
-        success { echo "Release generado exitosamente." }
-        failure { echo "Falló el release." }
+        success {
+            archiveArtifacts artifacts: 'release.zip', fingerprint: true
+            echo "Release generado exitosamente."
+        }
+        failure {
+            echo "Falló el release."
+        }
     }
 }
