@@ -9,6 +9,21 @@ pipeline {
             }
         }
 
+        stage('Commit Info') {
+            steps {
+                sh '''
+                    echo "====================================="
+                    echo "      INFORMACIÓN DEL ÚLTIMO COMMIT"
+                    echo "====================================="
+                    echo "Autor:      $(git log -1 --pretty=format:'%an')"
+                    echo "Email:      $(git log -1 --pretty=format:'%ae')"
+                    echo "Fecha:      $(git log -1 --pretty=format:'%ad')"
+                    echo "Mensaje:    $(git log -1 --pretty=format:'%s')"
+                    echo "====================================="
+                '''
+            }
+        }
+
         stage('Build') {
             steps {
                 sh 'echo "Compilando aplicación..."'
