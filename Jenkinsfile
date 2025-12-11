@@ -5,22 +5,22 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/JoeDlc15/JenkinsDevops.git'
-            }
-        }
-
-        stage('Commit Info') {
-            steps {
-                sh '''
-                    echo "====================================="
-                    echo "      INFORMACIÓN DEL ÚLTIMO COMMIT"
-                    echo "====================================="
-                    echo "Autor:      $(git log -1 --pretty=format:'%an')"
-                    echo "Email:      $(git log -1 --pretty=format:'%ae')"
-                    echo "Fecha:      $(git log -1 --pretty=format:'%ad')"
-                    echo "Mensaje:    $(git log -1 --pretty=format:'%s')"
-                    echo "====================================="
-                '''
+                // 1. Descargamos el código primero
+                git branch: 'main', url: 'https://github.com/JoeDlc15/DevopsProyect.git'
+                
+                // 2. Usamos un bloque script para ejecutar comandos y guardar variables
+                script {
+                    // Obtenemos el nombre del autor del último commit
+                    def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+                    
+                    // Imprimimos el nombre en la consola
+                    echo "------------------------------------------------"
+                    echo "🚀 El commit fue realizado por: ${author}"
+                    echo "------------------------------------------------"
+                    
+                    // Opcional: Agregar el nombre a la descripción del Build en Jenkins (para verlo en el dashboard)
+                    currentBuild.description = "Commit por: ${author}"
+                }
             }
         }
 
@@ -39,7 +39,8 @@ pipeline {
         stage('Package Release') {
             steps {
                 sh 'echo "Generando artefacto release..."'
-                sh 'zip -r release.zip ./src'
+                // Aseguramos que existe el directorio antes de comprimir (buena práctica)
+                sh 'if [ -d "./src" ]; then zip -r release.zip ./src; else echo "Directorio src no encontrado"; fi'
             }
         }
 
@@ -52,8 +53,13 @@ pipeline {
 
     post {
         success {
-            archiveArtifacts artifacts: 'release.zip', fingerprint: true
-            echo "Release generado exitosamente."
+            // Solo archivamos si el archivo existe
+            script {
+                if (fileExists('release.zip')) {
+                    archiveArtifacts artifacts: 'release.zip', fingerprint: true
+                    echo "Release generado exitosamente."
+                }
+            }
         }
         failure {
             echo "Falló el release."
