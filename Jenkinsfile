@@ -39,8 +39,7 @@ pipeline {
         stage('Package Release') {
             steps {
                 sh 'echo "Generando artefacto release..."'
-                // Aseguramos que existe el directorio antes de comprimir (buena práctica)
-                sh 'if [ -d "./src" ]; then zip -r release.zip ./src; else echo "Directorio src no encontrado"; fi'
+                sh "zip -r release-v${BUILD_NUMBER}.zip ./src"
             }
         }
 
@@ -53,13 +52,8 @@ pipeline {
 
     post {
         success {
-            // Solo archivamos si el archivo existe
-            script {
-                if (fileExists('release.zip')) {
-                    archiveArtifacts artifacts: 'release.zip', fingerprint: true
-                    echo "Release generado exitosamente."
-                }
-            }
+            archiveArtifacts artifacts: 'release-v*.zip', fingerprint: true
+            echo "Release v${BUILD_NUMBER} generado exitosamente."
         }
         failure {
             echo "Falló el release."
